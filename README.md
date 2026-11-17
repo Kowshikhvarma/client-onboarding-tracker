@@ -48,7 +48,7 @@ Slow onboarding is one of the strongest early predictors of churn. A CSM onboard
 ## Quick start
 
 ```bash
-git clone https://github.com/<your-username>/client-onboarding-tracker.git
+git clone https://github.com/Kowshikhvarma/client-onboarding-tracker.git
 cd client-onboarding-tracker
 python -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
