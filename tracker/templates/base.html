@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Onboarding Tracker{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <nav class="topbar">
+    <a href="{{ url_for('views.dashboard') }}" class="brand">🚀 Onboarding Tracker</a>
+    <div class="nav-links">
+      <a href="{{ url_for('views.dashboard') }}">Dashboard</a>
+      <a href="{{ url_for('views.new_client') }}" class="btn btn-small">+ New client</a>
+    </div>
+  </nav>
+  <main class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in messages %}<div class="flash {{ cat }}">{{ msg }}</div>{% endfor %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

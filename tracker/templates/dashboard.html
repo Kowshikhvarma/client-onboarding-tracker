@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Onboarding portfolio</h1>
+<p class="muted">Every client from kickoff to go-live: who's on track, who's slipping, and what's overdue.</p>
+
+<section class="kpis">
+  <div class="kpi"><span>In onboarding</span><b>{{ m.in_onboarding }}</b></div>
+  <div class="kpi"><span>Live</span><b>{{ m.live }}</b></div>
+  <div class="kpi"><span>Avg days to go-live</span><b>{{ m.avg_days_to_go_live if m.avg_days_to_go_live is not none else "–" }}</b></div>
+  <div class="kpi"><span>Go-live on target</span><b>{{ (m.go_live_on_target_pct|string + "%") if m.go_live_on_target_pct is not none else "–" }}</b></div>
+  <div class="kpi"><span>Tasks done on time</span><b>{{ (m.task_on_time_pct|string + "%") if m.task_on_time_pct is not none else "–" }}</b></div>
+  <div class="kpi warn"><span>Overdue tasks</span><b>{{ m.overdue_tasks }}</b></div>
+</section>
+
+<div class="grid-2">
+  <section class="card">
+    <h3>Health</h3>
+    {% set total = m.clients_total or 1 %}
+    {% for label in ["On Track", "At Risk", "Delayed", "Live"] %}
+      {% set n = m.health.get(label, 0) %}
+      <div class="bar-row">
+        <span class="bar-label">{{ label }}</span>
+        <div class="bar"><div class="bar-fill h-{{ label|lower|replace(' ', '-') }}" style="width: {{ (100 * n / total)|round(1) }}%"></div></div>
+        <span class="bar-val">{{ n }}</span>
+      </div>
+    {% endfor %}
+  </section>
+  <section class="card">
+    <h3>CSM workload (clients in onboarding)</h3>
+    <table class="compact">
+      <thead><tr><th>CSM</th><th>Clients</th><th>Open tasks</th><th>Overdue</th></tr></thead>
+      <tbody>
+      {% for csm, w in m.csm_workload.items() %}
+        <tr><td>{{ csm }}</td><td>{{ w.clients }}</td><td>{{ w.open_tasks }}</td>
+            <td class="{{ 'red' if w.overdue else '' }}">{{ w.overdue }}</td></tr>
+      {% else %}<tr><td colspan="4" class="muted">No active onboardings.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<section class="card">
+  <form class="filters" method="get">
+    <select name="owner" onchange="this.form.submit()">
+      <option value="">All CSMs</option>
+      {% for o in owners %}<option {{ 'selected' if o == owner }}>{{ o }}</option>{% endfor %}
+    </select>
+    <select name="health" onchange="this.form.submit()">
+      <option value="">All health</option>
+      {% for h in ["Delayed", "At Risk", "On Track", "Live"] %}<option {{ 'selected' if h == health }}>{{ h }}</option>{% endfor %}
+    </select>
+  </form>
+  <table>
+    <thead><tr><th>Client</th><th>Plan</th><th>CSM</th><th>Phase</th><th>Progress</th><th>Target go-live</th><th>Overdue</th><th>Health</th></tr></thead>
+    <tbody>
+    {% for c in clients %}
+      <tr>
+        <td><a href="{{ url_for('views.client_detail', client_id=c.id) }}"><b>{{ c.name }}</b></a><div class="muted small">{{ c.industry or "" }}</div></td>
+        <td>{{ c.plan }}</td>
+        <td>{{ c.csm_owner }}</td>
+        <td>{{ c.current_phase }}</td>
+        <td><div class="progress"><div style="width: {{ c.progress }}%"></div></div><span class="small">{{ c.progress }}%</span></td>
+        <td>{{ c.target_go_live.strftime("%d %b %Y") }}</td>
+        <td class="{{ 'red' if c.overdue_tasks else '' }}">{{ c.overdue_tasks|length }}</td>
+        <td><span class="badge h-{{ c.health|lower|replace(' ', '-') }}">{{ c.health }}</span></td>
+      </tr>
+    {% else %}
+      <tr><td colspan="8" class="muted">No clients yet. <a href="{{ url_for('views.new_client') }}">Add your first client</a> or run <code>flask --app tracker seed</code>.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

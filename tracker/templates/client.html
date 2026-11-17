@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}{{ c.name }} · Onboarding Tracker{% endblock %}
+{% block content %}
+<div class="client-head" data-client-id="{{ c.id }}">
+  <div>
+    <h1>{{ c.name }} <span class="badge h-{{ c.health|lower|replace(' ', '-') }}" id="health-badge">{{ c.health }}</span></h1>
+    <p class="muted">{{ c.plan }} · {{ c.industry or "—" }} · CSM: <b>{{ c.csm_owner }}</b>
+      {% if c.contact_name %} · Contact: {{ c.contact_name }}{% if c.contact_email %} (<a href="mailto:{{ c.contact_email }}">{{ c.contact_email }}</a>){% endif %}{% endif %}</p>
+  </div>
+  {% if not c.go_live_date %}<button class="btn" id="go-live-btn">Mark as live</button>{% endif %}
+</div>
+
+<section class="kpis">
+  <div class="kpi"><span>Progress</span><b id="progress-val">{{ c.progress }}%</b></div>
+  <div class="kpi"><span>Current phase</span><b id="phase-val">{{ c.current_phase }}</b></div>
+  <div class="kpi"><span>Kickoff</span><b>{{ c.kickoff_date.strftime("%d %b") }}</b></div>
+  <div class="kpi"><span>Target go-live</span><b>{{ c.target_go_live.strftime("%d %b") }}</b></div>
+  {% if c.go_live_date %}
+  <div class="kpi"><span>Days to go-live</span><b>{{ c.days_to_go_live }}</b></div>
+  {% else %}
+  <div class="kpi {{ 'warn' if (c.target_go_live - today).days < 0 }}"><span>Days left</span><b>{{ (c.target_go_live - today).days }}</b></div>
+  {% endif %}
+</section>
+
+<div class="phase-track">
+  {% for p in phases %}
+    {% set ts = by_phase[p] %}
+    {% set done = ts|selectattr('done')|list|length %}
+    <div class="phase {{ 'complete' if ts and done == ts|length else ('active' if p == c.current_phase else '') }}">
+      <b>{{ p }}</b><span>{{ done }}/{{ ts|length }}</span>
+    </div>
+  {% endfor %}
+</div>
+
+<div class="grid-2">
+  <section class="card">
+    <h3>Onboarding checklist</h3>
+    {% for p in phases %}
+      <h4>{{ p }}</h4>
+      <ul class="tasks" id="tasks-{{ p }}">
+      {% for t in by_phase[p] %}
+        <li class="{{ 'done' if t.done }} {{ 'overdue' if t.is_overdue }}">
+          <label><input type="checkbox" data-task-id="{{ t.id }}" {{ 'checked' if t.done }}> {{ t.title }}</label>
+          <span class="small muted">{{ t.owner }} · due {{ t.due_date.strftime("%d %b") }}{% if t.is_overdue %} · <b class="red">overdue</b>{% endif %}</span>
+        </li>
+      {% endfor %}
+      </ul>
+    {% endfor %}
+    <form id="task-form" class="inline-form">
+      <input name="title" placeholder="Add a custom task…" required>
+      <select name="phase">{% for p in phases %}<option>{{ p }}</option>{% endfor %}</select>
+      <input name="due_date" type="date">
+      <button class="btn btn-small" type="submit">Add</button>
+    </form>
+  </section>
+
+  <section class="card">
+    <h3>Activity log</h3>
+    <form id="note-form" class="note-form">
+      <select name="kind"><option value="note">Note</option><option value="call">Call</option><option value="email">Email</option><option value="risk">Risk</option></select>
+      <textarea name="text" placeholder="Log a call, email or risk…" required></textarea>
+      <button class="btn btn-small" type="submit">Add to log</button>
+    </form>
+    <ul class="notes" id="notes">
+      {% for n in c.notes %}
+        <li class="note-{{ n.kind }}"><span class="small muted">{{ n.kind|upper }} · {{ n.author }} · {{ n.created_at.strftime("%d %b %H:%M") }}</span><p>{{ n.text }}</p></li>
+      {% else %}<li class="muted" id="no-notes">No activity yet.</li>{% endfor %}
+    </ul>
+  </section>
+</div>
+{% endblock %}

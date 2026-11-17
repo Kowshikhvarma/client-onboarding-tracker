@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}New client · Onboarding Tracker{% endblock %}
+{% block content %}
+<h1>New client</h1>
+<p class="muted">A 10-step onboarding playbook (Kickoff → Setup → Training → Go-Live) is created automatically with due dates from the kickoff date.</p>
+<form method="post" class="card form-grid">
+  <label>Client name *<input name="name" required value="{{ form.get('name', '') }}"></label>
+  <label>CSM owner *<input name="csm_owner" required value="{{ form.get('csm_owner', '') }}"></label>
+  <label>Plan
+    <select name="plan">{% for p in ["Starter", "Growth", "Enterprise"] %}<option {{ 'selected' if form.get('plan') == p }}>{{ p }}</option>{% endfor %}</select>
+  </label>
+  <label>Industry<input name="industry" value="{{ form.get('industry', '') }}"></label>
+  <label>Primary contact<input name="contact_name" value="{{ form.get('contact_name', '') }}"></label>
+  <label>Contact email<input name="contact_email" type="email" value="{{ form.get('contact_email', '') }}"></label>
+  <label>Kickoff date<input name="kickoff_date" type="date" value="{{ form.get('kickoff_date', '') }}"></label>
+  <label>Target go-live<input name="target_go_live" type="date" value="{{ form.get('target_go_live', '') }}"></label>
+  <div class="full"><button class="btn" type="submit">Create client &amp; playbook</button></div>
+</form>
+{% endblock %}
